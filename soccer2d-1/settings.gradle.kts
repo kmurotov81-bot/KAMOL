@@ -1,10 +1,26 @@
 pluginManagement {
-    repositories { google(); mavenCentral(); gradlePluginPortal() }
+    repositories {
+        google()
+        maven {
+            url = uri("https://repo1.maven.org/maven2")
+        }
+        gradlePluginPortal()
+    }
 }
+
 dependencyResolutionManagement {
-    repositories { google(); mavenCentral() }
+    repositories {
+        google()
+        maven {
+            url = uri("https://repo1.maven.org/maven2")
+        }
+    }
 }
+
 rootProject.name = "soccer"
+
 include(":shared", ":server")
-// Docker/CI'da faqat server kerak bo'lsa: SKIP_ANDROID=1
-if (System.getenv("SKIP_ANDROID") == null) include(":android")
+
+if (System.getenv("SKIP_ANDROID") == null) {
+    include(":android")
+}
