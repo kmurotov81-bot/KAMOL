@@ -1,0 +1,89 @@
+name: Soccer 2D Build
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: soccer2d-1
+
+    env:
+      VERSION_CODE: ${{ github.run_number }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.5"
+
+      - name: Build Debug APK and Release AAB
+        run: |
+          gradle :android:assembleDebug :android:bundleRelease --no-daemon
+
+      - name: Upload Android files
+        uses: actions/upload-artifact@v4
+        with:
+          name: Soccer2D-Android
+          path: |
+            soccer2d-1/android/build/outputs/apk/debug/*.apk
+            soccer2d-1/android/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 14
+
+  server:
+    name: Build Game Server
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: soccer2d-1
+
+    env:
+      SKIP_ANDROID: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.5"
+
+      - name: Build server
+        run: gradle :server:installDist --no-daemon
+
+      - name: Upload server
+        uses: actions/upload-artifact@v4
+        with:
+          name: Soccer2D-Server
+          path: soccer2d-1/server/build/install/server/
+          if-no-files-found: error
+          retention-days: 14
