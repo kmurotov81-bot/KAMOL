@@ -17,7 +17,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: soccer2d-1
+        working-directory: soccer2d-2
 
     env:
       VERSION_CODE: ${{ github.run_number }}
@@ -46,8 +46,8 @@ jobs:
         with:
           name: Soccer2D-Android
           path: |
-            soccer2d-1/android/build/outputs/apk/debug/*.apk
-            soccer2d-1/android/build/outputs/bundle/release/*.aab
+            soccer2d-2/android/build/outputs/apk/debug/*.apk
+            soccer2d-2/android/build/outputs/bundle/release/*.aab
           if-no-files-found: error
           retention-days: 14
 
@@ -57,7 +57,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: soccer2d-1
+        working-directory: soccer2d-2
 
     env:
       SKIP_ANDROID: "1"
@@ -84,6 +84,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Soccer2D-Server
-          path: soccer2d-1/server/build/install/server/
+          path: soccer2d-2/server/build/install/server/
           if-no-files-found: error
           retention-days: 14
