@@ -1,89 +1,109 @@
-name: Soccer 2D Build
+name: Soccer2D CI
 
 on:
   push:
-    branches: ["**"]
-    tags: ["v*"]
+    branches:
+      - main
+    tags:
+      - "v*"
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: soccer2d-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  android:
-    name: Build Android APK
+  server:
+    name: Test shared code and build server
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    defaults:
-      run:
-        working-directory: soccer2d-2
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+
+      - name: Run shared tests and build server
+        env:
+          SKIP_ANDROID: "1"
+        run: gradle :shared:test :server:installDist --no-daemon
+
+      - name: Upload server distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: soccer2d-server
+          path: server/build/install/server/
+          if-no-files-found: error
+          retention-days: 14
+
+  android:
+    name: Build Android APK and AAB
+    runs-on: ubuntu-latest
     env:
+      KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
       VERSION_CODE: ${{ github.run_number }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      - name: Setup Gradle
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.5"
+          gradle-version: "8.11.1"
 
-      - name: Build Debug APK and Release AAB
+      - name: Prepare release keystore (if configured)
+        if: ${{ env.KEYSTORE_B64 != '' }}
+        shell: bash
         run: |
-          gradle :android:assembleDebug :android:bundleRelease --no-daemon
+          set -euo pipefail
+          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          echo "KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
 
-      - name: Upload Android files
+      - name: Build debug APK and release AAB
+        run: gradle :android:assembleDebug :android:bundleRelease --no-daemon
+
+      - name: Upload Android build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Soccer2D-Android
+          name: soccer2d-android
           path: |
-            soccer2d-2/android/build/outputs/apk/debug/*.apk
-            soccer2d-2/android/build/outputs/bundle/release/*.aab
+            android/build/outputs/apk/debug/*.apk
+            android/build/outputs/bundle/release/*.aab
           if-no-files-found: error
           retention-days: 14
 
-  server:
-    name: Build Game Server
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: soccer2d-2
-
-    env:
-      SKIP_ANDROID: "1"
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - name: Publish AAB to Google Play Internal Testing
+        if: >-
+          startsWith(github.ref, 'refs/tags/v') &&
+          env.KEYSTORE_B64 != '' &&
+          env.PLAY_SERVICE_ACCOUNT_JSON != ''
+        uses: r0adkll/upload-google-play@v1
         with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.5"
-
-      - name: Build server
-        run: gradle :server:installDist --no-daemon
-
-      - name: Upload server
-        uses: actions/upload-artifact@v4
-        with:
-          name: Soccer2D-Server
-          path: soccer2d-2/server/build/install/server/
-          if-no-files-found: error
-          retention-days: 14
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.soccer.game
+          releaseFiles: android/build/outputs/bundle/release/*.aab
+          track: internal
+          status: completed
