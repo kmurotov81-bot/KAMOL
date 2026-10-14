@@ -53,7 +53,7 @@ tasks.register("copyAndroidNatives") {
     doFirst {
         natives.files.forEach { jar ->
             val abi = listOf("armeabi-v7a", "arm64-v8a", "x86_64", "x86")
-                .firstOrNull { jar.name.endsWith("natives-$abi.jar") } ?: return@forEach
+                                .firstOrNull { jar.name.endsWith("natives-$it.jar") } ?: return@forEach
             copy {
                 from(zipTree(jar))
                 into(file("libs/$abi"))
