@@ -1,129 +1,66 @@
-name: Soccer2D CI
+name: CI
 
 on:
   push:
-    branches:
-      - main
-    tags:
-      - "v*"
+    branches: [main]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
-permissions:
-  contents: read
-
-concurrency:
-  group: soccer2d-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   server:
-    name: Test shared code and build server
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: ./soccer2d_fixed.1
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Verify project files
-        run: |
-          ls -la
-          test -f settings.gradle.kts
-
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.11.1"
-
-      - name: Run shared tests and build server
-        env:
-          SKIP_ANDROID: "1"
-        run: gradle :shared:test :server:installDist --no-daemon
-
-      - name: Upload server distribution
-        uses: actions/upload-artifact@v4
-        with:
-          name: soccer2d-server
-          path: soccer2d_fixed.1/server/build/install/server/
-          if-no-files-found: error
-          retention-days: 14
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "8.11.1" }
+      - run: gradle :shared:test :server:installDist --no-daemon
+        env: { SKIP_ANDROID: "1" }
+      - uses: actions/upload-artifact@v4
+        with: { name: server, path: server/build/install/server }
 
   android:
-    name: Build Android APK and AAB
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: ./soccer2d_fixed.1
-
     env:
       KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
       KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
       KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
       KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
       VERSION_CODE: ${{ github.run_number }}
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "8.11.1" }
 
-      - name: Verify project files
-        run: |
-          ls -la
-          test -f settings.gradle.kts
-
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.11.1"
-
-      - name: Prepare release keystore
+      - name: Keystore (agar secret berilgan bo'lsa)
         if: ${{ env.KEYSTORE_B64 != '' }}
-        shell: bash
         run: |
-          set -euo pipefail
-          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
           echo "KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
 
-      - name: Build debug APK and release AAB
-        run: gradle :android:assembleDebug :android:bundleRelease --no-daemon
+      - name: Build (debug APK + release APK/AAB, R8 bilan)
+        run: gradle :android:assembleDebug :android:assembleRelease :android:bundleRelease --no-daemon
 
-      - name: Upload Android build artifacts
-        uses: actions/upload-artifact@v4
+      - name: 16 KB sahifa tekshiruvi
+        run: bash tools/check16k.sh "android/build/outputs/apk/release/*.apk"
+
+      - uses: actions/upload-artifact@v4
         with:
-          name: soccer2d-android
+          name: android
           path: |
-            soccer2d_fixed.1/android/build/outputs/apk/debug/*.apk
-            soccer2d_fixed.1/android/build/outputs/bundle/release/*.aab
-          if-no-files-found: error
-          retention-days: 14
+            android/build/outputs/bundle/release/*.aab
+            android/build/outputs/apk/debug/*.apk
 
-      - name: Publish AAB to Google Play Internal Testing
-        if: >-
-          startsWith(github.ref, 'refs/tags/v') &&
-          env.KEYSTORE_B64 != '' &&
-          env.PLAY_SERVICE_ACCOUNT_JSON != ''
+      - name: Play Console Internal Testing (faqat v* tag)
+        if: ${{ startsWith(github.ref, 'refs/tags/v') && env.KEYSTORE_B64 != '' }}
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.soccer.game
-          releaseFiles: soccer2d_fixed.1/android/build/outputs/bundle/release/*.aab
+          releaseFiles: android/build/outputs/bundle/release/*.aab
           track: internal
           status: completed
