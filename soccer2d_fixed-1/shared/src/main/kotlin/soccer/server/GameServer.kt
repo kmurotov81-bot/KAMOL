@@ -1,4 +1,4 @@
-package soccer.server
+8package soccer.server
 
 import soccer.shared.*
 import java.net.DatagramPacket
@@ -230,7 +230,7 @@ private class Room(
                 else -> clients.values.firstOrNull { it.id == ev.scorerId }?.name ?: "Player"
             }
             val data = Codec.goalMsg(ev.team, name, ev.own, ev.minute)
-            for (c in clients.values) sendTo(data, c.addr)
+                    for (c in clients.values) send(data, c.addr)
             sim.goalEvent = null
         }
         if (prevState != State.LOBBY && sim.state == State.LOBBY) clearBots()   // match tugadi -> yana Select Teams
