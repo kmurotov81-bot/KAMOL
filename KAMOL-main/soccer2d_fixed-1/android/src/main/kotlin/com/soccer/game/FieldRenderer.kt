@@ -67,6 +67,7 @@ class FieldRenderer(atlas: TextureAtlas) {
     fun drawStatic(batch: SpriteBatch, shapes: ShapeRenderer, cam: OrthographicCamera) {
         val w = C.FIELD_W; val h = C.FIELD_H; val d = C.GOAL_DEPTH
         val g1 = (h - C.GOAL_W) / 2f
+        val g2 = g1 + C.GOAL_W
         drawStands(batch, cam)
         // 1) stadion ramkasi va o't
         batch.begin()
