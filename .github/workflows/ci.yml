@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PROJECT_DIR: soccer2d_fixed-1
+  PROJECT_DIR: KAMOL-main/soccer2d_fixed-1
 
 jobs:
   # Gradle'dan oldin tez tekshiruv: .kt fayl boshidagi begona belgilarni ushlaydi
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: soccer2d_fixed-1
+        working-directory: KAMOL-main/soccer2d_fixed-1
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -52,7 +52,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: server
-          path: soccer2d_fixed-1/server/build/install/server
+          path: KAMOL-main/soccer2d_fixed-1/server/build/install/server
           if-no-files-found: error
 
   android:
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: soccer2d_fixed-1
+        working-directory: KAMOL-main/soccer2d_fixed-1
     env:
       KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
       KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -93,9 +93,9 @@ jobs:
         with:
           name: android
           path: |
-            soccer2d_fixed-1/android/build/outputs/bundle/release/*.aab
-            soccer2d_fixed-1/android/build/outputs/apk/debug/*.apk
-            soccer2d_fixed-1/android/build/outputs/apk/release/*.apk
+            KAMOL-main/soccer2d_fixed-1/android/build/outputs/bundle/release/*.aab
+            KAMOL-main/soccer2d_fixed-1/android/build/outputs/apk/debug/*.apk
+            KAMOL-main/soccer2d_fixed-1/android/build/outputs/apk/release/*.apk
           if-no-files-found: error
 
       - name: Play Console Internal Testing (faqat v* tag)
@@ -104,6 +104,6 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ env.PLAY_JSON }}
           packageName: com.soccer.game
-          releaseFiles: soccer2d_fixed-1/android/build/outputs/bundle/release/*.aab
+          releaseFiles: KAMOL-main/soccer2d_fixed-1/android/build/outputs/bundle/release/*.aab
           track: internal
           status: completed
