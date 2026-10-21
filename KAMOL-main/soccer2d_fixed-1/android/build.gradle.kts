@@ -40,11 +40,12 @@ android {
 }
 
 dependencies {
+    val gdxVersion = "1.13.0"
     implementation(project(":shared"))
-    implementation("com.badlogicgames.gdx:gdx-backend-android:1.12.1")
+    implementation("com.badlogicgames.gdx:gdx-backend-android:$gdxVersion")
     for (abi in listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")) {
-        natives("com.badlogicgames.gdx:gdx-platform:1.12.1:natives-$abi")
-        natives("com.badlogicgames.gdx:gdx-box2d-platform:1.12.1:natives-$abi")
+        natives("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-$abi")
+        natives("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-$abi")
     }
 }
 
