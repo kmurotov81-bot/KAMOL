@@ -7,11 +7,36 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   PROJECT_DIR: soccer2d_fixed-1
 
 jobs:
+  # Gradle'dan oldin tez tekshiruv: .kt fayl boshidagi begona belgilarni ushlaydi
+  sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Kotlin fayllarining 1-qatorini tekshirish
+        run: |
+          bad=0
+          while IFS= read -r f; do
+            first="$(head -n 1 "$f" | tr -d '\r')"
+            case "$first" in
+              package\ *|import\ *|@file:*|//*|/\**|"") ;;
+              *) echo "::error file=$f,line=1::1-qatorda begona belgi: $first"; bad=1 ;;
+            esac
+          done < <(find "$PROJECT_DIR" -name '*.kt' -not -path '*/build/*')
+          exit $bad
+
   server:
+    needs: sanity
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -28,8 +53,10 @@ jobs:
         with:
           name: server
           path: soccer2d_fixed-1/server/build/install/server
+          if-no-files-found: error
 
   android:
+    needs: sanity
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -68,6 +95,8 @@ jobs:
           path: |
             soccer2d_fixed-1/android/build/outputs/bundle/release/*.aab
             soccer2d_fixed-1/android/build/outputs/apk/debug/*.apk
+            soccer2d_fixed-1/android/build/outputs/apk/release/*.apk
+          if-no-files-found: error
 
       - name: Play Console Internal Testing (faqat v* tag)
         if: startsWith(github.ref, 'refs/tags/v') && env.HAS_KEYSTORE == 'true' && env.HAS_PLAY == 'true'
