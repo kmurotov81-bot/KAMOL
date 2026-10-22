@@ -25,7 +25,6 @@ runs-on: ubuntu-latest
 steps:
 - uses: actions/checkout@v4
 
-```
   - name: Check Kotlin file headers
     shell: bash
     run: |
@@ -40,15 +39,12 @@ steps:
         esac
       done < <(find . -type f -name '*.kt' -not -path '*/build/*' -print)
       exit "$bad"
-```
 
 server:
 needs: sanity
 runs-on: ubuntu-latest
 steps:
 - uses: actions/checkout@v4
-
-```
   - uses: actions/setup-java@v4
     with:
       distribution: temurin
@@ -71,7 +67,6 @@ steps:
       name: server
       path: ${{ github.workspace }}/${{ env.PROJECT_DIR }}/server/build/install/server
       if-no-files-found: error
-```
 
 android:
 needs: sanity
@@ -86,7 +81,6 @@ HAS_KEYSTORE: ${{ secrets.KEYSTORE_B64 != '' && 'true' || 'false' }}
 HAS_PLAY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' && 'true' || 'false' }}
 VERSION_CODE: ${{ github.run_number }}
 
-```
 steps:
   - uses: actions/checkout@v4
 
@@ -130,4 +124,4 @@ steps:
       releaseFiles: ${{ github.workspace }}/${{ env.PROJECT_DIR }}/android/build/outputs/bundle/release/*.aab
       track: internal
       status: completed
-```
+
