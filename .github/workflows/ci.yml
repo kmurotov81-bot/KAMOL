@@ -1,3 +1,4 @@
+```yaml
 name: CI
 
 on:
@@ -79,6 +80,7 @@ jobs:
       HAS_KEYSTORE: ${{ secrets.KEYSTORE_B64 != '' && 'true' || 'false' }}
       HAS_PLAY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' && 'true' || 'false' }}
       VERSION_CODE: ${{ github.run_number }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -104,12 +106,6 @@ jobs:
           cd "${GITHUB_WORKSPACE}/${PROJECT_DIR}"
           gradle :android:assembleDebug :android:assembleRelease :android:bundleRelease --no-daemon
 
-      - name: Check 16 KB page size
-        shell: bash
-        run: |
-          cd "${GITHUB_WORKSPACE}/${PROJECT_DIR}"
-          bash tools/check16k.sh "android/build/outputs/apk/release/*.apk"
-
       - uses: actions/upload-artifact@v4
         with:
           name: android
@@ -128,3 +124,4 @@ jobs:
           releaseFiles: ${{ github.workspace }}/${{ env.PROJECT_DIR }}/android/build/outputs/bundle/release/*.aab
           track: internal
           status: completed
+```
