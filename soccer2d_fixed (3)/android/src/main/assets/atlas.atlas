@@ -1,0 +1,166 @@
+atlas.png
+size: 1024, 1024
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+logo
+  rotate: false
+  xy: 0, 0
+  size: 640, 300
+  orig: 640, 300
+  offset: 0, 0
+  index: -1
+joy_base
+  rotate: false
+  xy: 642, 0
+  size: 256, 256
+  orig: 256, 256
+  offset: 0, 0
+  index: -1
+goal_blue
+  rotate: false
+  xy: 900, 0
+  size: 100, 250
+  orig: 100, 250
+  offset: 0, 0
+  index: -1
+goal_red
+  rotate: false
+  xy: 0, 302
+  size: 100, 250
+  orig: 100, 250
+  offset: 0, 0
+  index: -1
+btn_shoot
+  rotate: false
+  xy: 102, 302
+  size: 192, 192
+  orig: 192, 192
+  offset: 0, 0
+  index: -1
+btn_pass
+  rotate: false
+  xy: 296, 302
+  size: 192, 192
+  orig: 192, 192
+  offset: 0, 0
+  index: -1
+ball_blue
+  rotate: false
+  xy: 490, 302
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+ball_cyan
+  rotate: false
+  xy: 620, 302
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+ball_teal
+  rotate: false
+  xy: 750, 302
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+ball_red
+  rotate: false
+  xy: 880, 302
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+ball_orange
+  rotate: false
+  xy: 0, 554
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+ball_pink
+  rotate: false
+  xy: 130, 554
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+ring
+  rotate: false
+  xy: 260, 554
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+joy_knob
+  rotate: false
+  xy: 390, 554
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+panel
+  rotate: false
+  xy: 520, 554
+  size: 256, 128
+  orig: 256, 128
+  offset: 0, 0
+  index: -1
+btn_green
+  rotate: false
+  xy: 0, 684
+  size: 256, 96
+  orig: 256, 96
+  offset: 0, 0
+  index: -1
+btn_dark
+  rotate: false
+  xy: 258, 684
+  size: 256, 96
+  orig: 256, 96
+  offset: 0, 0
+  index: -1
+score_blue
+  rotate: false
+  xy: 516, 684
+  size: 256, 96
+  orig: 256, 96
+  offset: 0, 0
+  index: -1
+score_red
+  rotate: false
+  xy: 0, 782
+  size: 256, 96
+  orig: 256, 96
+  offset: 0, 0
+  index: -1
+ball
+  rotate: false
+  xy: 258, 782
+  size: 64, 64
+  orig: 64, 64
+  offset: 0, 0
+  index: -1
+shadow
+  rotate: false
+  xy: 324, 782
+  size: 64, 64
+  orig: 64, 64
+  offset: 0, 0
+  index: -1
+marker
+  rotate: false
+  xy: 390, 782
+  size: 64, 56
+  orig: 64, 56
+  offset: 0, 0
+  index: -1
+white
+  rotate: false
+  xy: 456, 782
+  size: 4, 4
+  orig: 4, 4
+  offset: 0, 0
+  index: -1
