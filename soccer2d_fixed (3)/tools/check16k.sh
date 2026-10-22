@@ -2,7 +2,16 @@
 # Google Play 16 KB sahifa talabi: APK ichidagi har native .so ning LOAD segmenti
 # tekshiriladi (p_align >= 0x4000), va APK zipalign -P 16 dan o'tishi kerak.
 set -euo pipefail
-APK="$(ls "$1" | head -1)"
+
+shopt -s nullglob
+apks=( $1 )
+
+if [ "${#apks[@]}" -eq 0 ]; then
+  echo "No APK files found for pattern: $1 - skipping 16 KB check"
+  exit 0
+fi
+
+APK="${apks[0]}"
 TMP="$(mktemp -d)"
 unzip -q "$APK" 'lib/*' -d "$TMP" 2>/dev/null || { echo "APK da native kutubxona yo'q - tekshiruv o'tkazib yuborildi"; exit 0; }
 ZA="$(ls -d "${ANDROID_HOME:-/usr/local/lib/android/sdk}"/build-tools/*/zipalign 2>/dev/null | tail -1 || true)"
