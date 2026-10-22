@@ -2,6 +2,7 @@ package com.soccer.game
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.audio.Sound
+import soccer.shared.SLog
 
 /** Oddiy ovoz effektlari. Fayl topilmasa yoki audio ishlamasa - jim o'tadi (o'yin to'xtamaydi). */
 object Sfx {
