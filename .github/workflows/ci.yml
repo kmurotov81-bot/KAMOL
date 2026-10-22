@@ -1,4 +1,4 @@
-```yaml
+yaml
 name: CI
 
 on:
@@ -124,4 +124,3 @@ jobs:
           releaseFiles: ${{ github.workspace }}/${{ env.PROJECT_DIR }}/android/build/outputs/bundle/release/*.aab
           track: internal
           status: completed
-```
