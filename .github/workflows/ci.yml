@@ -15,52 +15,61 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PROJECT_DIR: KAMOL-main/soccer2d_fixed-1
+  PROJECT_DIR: "soccer2d_fixed (3)"
 
 jobs:
-  # Gradle'dan oldin tez tekshiruv: .kt fayl boshidagi begona belgilarni ushlaydi
   sanity:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Kotlin fayllarining 1-qatorini tekshirish
+
+      - name: Check Kotlin file headers
+        shell: bash
         run: |
+          set -euo pipefail
+          cd "${GITHUB_WORKSPACE}/${PROJECT_DIR}"
           bad=0
           while IFS= read -r f; do
             first="$(head -n 1 "$f" | tr -d '\r')"
             case "$first" in
               package\ *|import\ *|@file:*|//*|/\**|"") ;;
-              *) echo "::error file=$f,line=1::1-qatorda begona belgi: $first"; bad=1 ;;
+              *) echo "::error file=${f},line=1::Unexpected first line: $first"; bad=1 ;;
             esac
-          done < <(find "$PROJECT_DIR" -name '*.kt' -not -path '*/build/*')
-          exit $bad
+          done < <(find . -type f -name '*.kt' -not -path '*/build/*' -print)
+          exit "$bad"
 
   server:
     needs: sanity
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: KAMOL-main/soccer2d_fixed-1
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: 17 }
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - uses: gradle/actions/setup-gradle@v4
-        with: { gradle-version: "8.11.1" }
-      - run: gradle :shared:test :server:installDist --no-daemon
-        env: { SKIP_ANDROID: "1" }
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Build server
+        shell: bash
+        env:
+          SKIP_ANDROID: '1'
+        run: |
+          cd "${GITHUB_WORKSPACE}/${PROJECT_DIR}"
+          gradle :shared:test :server:installDist --no-daemon
+
       - uses: actions/upload-artifact@v4
         with:
           name: server
-          path: KAMOL-main/soccer2d_fixed-1/server/build/install/server
+          path: ${{ github.workspace }}/${{ env.PROJECT_DIR }}/server/build/install/server
           if-no-files-found: error
 
   android:
     needs: sanity
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: KAMOL-main/soccer2d_fixed-1
     env:
       KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
       KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -72,38 +81,50 @@ jobs:
       VERSION_CODE: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: 17 }
-      - uses: gradle/actions/setup-gradle@v4
-        with: { gradle-version: "8.11.1" }
 
-      - name: Keystore (agar secret berilgan bo'lsa)
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Keystore when provided
         if: env.HAS_KEYSTORE == 'true'
+        shell: bash
         run: |
           echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
           echo "KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
 
-      - name: Build (debug APK + release APK/AAB, R8 bilan)
-        run: gradle :android:assembleDebug :android:assembleRelease :android:bundleRelease --no-daemon
+      - name: Build Android APK / AAB
+        shell: bash
+        run: |
+          cd "${GITHUB_WORKSPACE}/${PROJECT_DIR}"
+          gradle :android:assembleDebug :android:assembleRelease :android:bundleRelease --no-daemon
 
-      - name: 16 KB sahifa tekshiruvi
-        run: bash tools/check16k.sh "android/build/outputs/apk/release/*.apk"
+      - name: Check 16 KB page size
+        shell: bash
+        run: |
+          cd "${GITHUB_WORKSPACE}/${PROJECT_DIR}"
+          bash tools/check16k.sh "android/build/outputs/apk/release/*.apk"
 
       - uses: actions/upload-artifact@v4
         with:
           name: android
           path: |
-            KAMOL-main/soccer2d_fixed-1/android/build/outputs/bundle/release/*.aab
-            KAMOL-main/soccer2d_fixed-1/android/build/outputs/apk/debug/*.apk
-            KAMOL-main/soccer2d_fixed-1/android/build/outputs/apk/release/*.apk
+            ${{ github.workspace }}/${{ env.PROJECT_DIR }}/android/build/outputs/bundle/release/*.aab
+            ${{ github.workspace }}/${{ env.PROJECT_DIR }}/android/build/outputs/apk/debug/*.apk
+            ${{ github.workspace }}/${{ env.PROJECT_DIR }}/android/build/outputs/apk/release/*.apk
           if-no-files-found: error
 
-      - name: Play Console Internal Testing (faqat v* tag)
+      - name: Play Console Internal Testing (tagged releases only)
         if: startsWith(github.ref, 'refs/tags/v') && env.HAS_KEYSTORE == 'true' && env.HAS_PLAY == 'true'
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ env.PLAY_JSON }}
           packageName: com.soccer.game
-          releaseFiles: KAMOL-main/soccer2d_fixed-1/android/build/outputs/bundle/release/*.aab
+          releaseFiles: ${{ github.workspace }}/${{ env.PROJECT_DIR }}/android/build/outputs/bundle/release/*.aab
           track: internal
           status: completed
